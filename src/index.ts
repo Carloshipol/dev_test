@@ -35,10 +35,49 @@ initializeDatabase();
 
 app.post('/users', async (req, res) => {
 // Crie o endpoint de users
+  try {
+    const userRepository = AppDataSource.getRepository(User);
+    const {firtName, lastName, email } = req.body;
+
+    if(!firtName || !lastName || !email){
+      return res.status(400).json({message:"error! fill in all fields"})
+    }
+
+    const user = userRepository.create({firtName, lastName, email});
+    await userRepository.save(user);
+
+    res.status(201).json(user);
+
+  } catch (error) {    
+    res.status(500).json({ message: "Error creatiang user"})
+  }
 });
 
 app.post('/posts', async (req, res) => {
 // Crie o endpoint de posts
+try {
+  const postRepository = AppDataSource.getRepository(Post);
+  const userRepository = AppDataSource.getRepository(User);
+  const { title, description, userId } = req.body;
+
+  if (!title || !description || !userId) {
+    return res.status(400).json({ message: "error! fill in all fields" });
+  }
+
+  const user = await userRepository.findOneBy({ id: userId });
+
+  if (!user) {
+    return res.status(404).json({ message: "User not found" });
+  }
+
+  const post = postRepository.create({ title, description, userId });
+  await postRepository.save(post);
+
+  res.status(201).json(post);
+} catch (error) {
+  console.error(error);
+  res.status(500).json({ message: "Error creating post" });
+}
 });
 
 const PORT = process.env.PORT || 3000;
